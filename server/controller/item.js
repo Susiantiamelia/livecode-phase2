@@ -64,6 +64,9 @@ class Items{
       .catch(err => {
 
       })
+    } else {
+      let query = req.query
+      Item.find({})
     }
     
   }
