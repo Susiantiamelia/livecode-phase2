@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Merienda" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.26.11/sweetalert2.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.26.11/sweetalert2.min.js"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+
+</head>
+<body>
+  <div id="app">
+    <navbar @login="login"></navbar>
+    <additem @additem="additem"></additem>
+    <div class="container">
+        <div class="row" v-for="(item,key) in items">
+            <div class="col s12 m7">
+              <div class="card">
+                <div class="card-image">
+                  <img src="images/sample-1.jpg">
+                  <span class="card-title">{{ item.name }}</span>
+                </div>
+                <div class="card-content">
+                  <p>Rp {{ item.price }}</p>
+                </div>
+                <div class="card-action" v-for="(tag,key) in item.tags">
+                  <p>{{ tag }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+                    
+    </div>
+    
+  </div>
+    
+    <style>
+    h5{
+      text-align: center
+    }
+    </style>
+    <script src="./components/additem.js"></script>
+    <script src="./components/navbar.js"></script>
+    <script>
+      let app = new Vue({
+        el: '#app',
+        data(){
+          return{
+            items: ''
+          }
+        },
+        methods: {
+          login(){
+            swal({
+              title: 'Login Here',
+              html: 
+              `<label for="username">Username:</label>`+
+              `<input id="username" class="swal2-input" type="text"> `+
+              `<label for="password">Password:</label>`+
+              `<input id="password" class="swal2-input" type="password">`,
+              focusConfirm: false,
+              preConfirm: () => {
+                let input = {
+                  username: document.getElementById('username').value,
+                  password: document.getElementById('password').value
+                }
+
+                axios.post('http://localhost:3000/request_token', input, {
+                  headers: {
+                    "Content-Type":"application/json"
+                  }
+                })
+                .then(result => {
+                  localStorage.setItem('token', result.data.token)
+                })
+                .catch(err => {
+                  swal({
+                    title: `${err.message}`,
+                    type: "error",
+                  });
+                })
+              }
+            })
+          },
+
+          additem(value){
+            let tags = value.tag.split(" ")
+
+            axios.post('http://localhost:3000/items',{
+              name: value.name,
+              price: value.price,
+              stock: value.stock,
+              tag: tags
+            }, {
+              headers: {
+                "Content-Type":"application/json",
+                Authorization: `Basic ${localStorage.getItem('token')}`
+              }
+            })
+            .then(result => {
+              this.items.push(result.data)
+            })
+            .catch(err => {
+              swal({
+                title: `${err.message}`,
+                type: "error",
+              });
+            })
+          },
+          allitem(){
+            axios.get('http://localhost:3000/items')
+            .then(result => {
+              this.items =result.data
+              
+            })
+            .catch(err => {
+              swal({
+                title: `${err.message}`,
+                type: "error",
+              });
+            })
+          }
+        },
+        created() {
+          this.allitem()
+        },
+      })
+    </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+
+</body>
+</html>
